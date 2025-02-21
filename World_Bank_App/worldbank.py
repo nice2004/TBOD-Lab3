@@ -3,6 +3,7 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 import pandas as pd
 from pandas_datareader import wb
+import datetime as dt
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 
@@ -47,13 +48,25 @@ app.layout = dbc.Container(
                         style={"textAlign": "center"},
                     ),
                     html.H2(
-                        "Last fetched out in 2016 and [time]",
+
+                        id="time",
                         style={'textAlign': 'center'}
                     ),
                     dcc.Graph(id="my-choropleth", figure={}),
                 ],
                 width=12,
             )
+        ),
+        dbc.Col(
+            [
+                dbc.Label(
+                    "output-text",
+                    id='text',
+                    className="fw-bold",
+                    style={"fontSize": 20},
+                ),
+            ],
+            width=4,
         ),
         dbc.Row([
             dbc.Col(
@@ -70,7 +83,7 @@ app.layout = dbc.Container(
                         className="three columns",
                     ),
                 ],
-                width=4,
+                width=5,
             ),
 
             dbc.Col(
@@ -119,10 +132,36 @@ app.layout = dbc.Container(
 )
 
 
-@app.callback(Output("storage", "data"), Input("timer", "n_intervals"))
+@app.callback(Output("storage", "data"),
+              Input("timer", "n_intervals"))
 def store_data(n_time):
     dataframe = update_wb_data()
-    return dataframe.to_dict("records")
+    last_fetched = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data_frame = dataframe.to_dict("records")
+    # return data_frame.to_dict("records", 'last_fetched')
+    return {'records': data_frame, 'last_fetched': last_fetched}
+
+
+@app.callback(
+    Output("time", "children"),
+    Input("storage", "data"),
+)
+def update_time(data_storage):
+    if 'last_fetched' in data_storage:
+        return f'Last Time and Date fetched {data_storage["last_fetched"]}'
+
+
+@app.callback(
+    Output("text", "children"),
+    Input("my-button", "n_clicks"),
+
+)
+def update_output(n_clicks):
+    if n_clicks > 0:
+        # slider += 1
+        return f'Button clicked {n_clicks} times'
+    else:
+        return ''
 
 
 @app.callback(
@@ -133,8 +172,8 @@ def store_data(n_time):
     State("i-dropdown", "value"),
 )
 def update_graph(n_clicks, stored_dataframe, years_chosen, indct_chosen):
-    dff = pd.DataFrame.from_records(stored_dataframe)
-    print(years_chosen)
+    dff = pd.DataFrame.from_records(stored_dataframe["records"])
+    print(n_clicks)
 
     if years_chosen[0] != years_chosen[1]:
         dff = dff[dff.year.between(years_chosen[0], years_chosen[1])]
@@ -143,6 +182,7 @@ def update_graph(n_clicks, stored_dataframe, years_chosen, indct_chosen):
 
         fig = px.choropleth(
             data_frame=dff,
+            title='number of submits'[n_clicks],
             locations="iso3c",
             color=indct_chosen,
             scope="world",
