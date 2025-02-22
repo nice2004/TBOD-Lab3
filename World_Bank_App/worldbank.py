@@ -40,95 +40,101 @@ def update_wb_data():
 
 app.layout = dbc.Container(
     [
-        dbc.Row(
-            dbc.Col(
-                [
-                    html.H1(
-                        "Comparison of World Bank Country Data",
-                        style={"textAlign": "center"},
-                    ),
-                    html.H2(
+    dbc.Row(
+        dbc.Col(
+            [
+                html.H1(
+                    "Comparison of World Bank Country Data",
+                    style={"textAlign": "center"},
+                ),
+                html.H2(
 
-                        id="time",
-                        style={'textAlign': 'center'}
-                    ),
-                    dcc.Graph(id="my-choropleth", figure={}),
-                ],
-                width=12,
-            )
-        ),
+                    id="time",
+                    style={'textAlign': 'center'}
+                ),
+                dcc.Graph(id="my-choropleth", figure={}),
+            ],
+            width=12,
+        )
+    ),
+    dbc.Col(
+        [
+            dbc.Label(
+                "output-text",
+                id='text',
+                className="fw-bold",
+                style={"fontSize": 20},
+            ),
+        ],
+        width=4,
+    ),
+    dbc.Row([
         dbc.Col(
             [
                 dbc.Label(
-                    "output-text",
-                    id='text',
+                    "Select Data Set:",
                     className="fw-bold",
-                    style={"fontSize": 20},
+                    style={"textDecoration": "underline", "fontSize": 20},
+                ),
+                dcc.Dropdown(
+                    id="i-dropdown",
+                    options=[{"label": i, "value": i} for i in indicators.values()],
+                    value=list(indicators.values())[0],
+                    className="three columns",
                 ),
             ],
-            width=4,
+            width=5,
         ),
-        dbc.Row([
-            dbc.Col(
-                [
-                    dbc.Label(
-                        "Select Data Set:",
-                        className="fw-bold",
-                        style={"textDecoration": "underline", "fontSize": 20},
-                    ),
-                    dcc.Dropdown(
-                        id="i-dropdown",
-                        options=[{"label": i, "value": i} for i in indicators.values()],
-                        value=list(indicators.values())[0],
-                        className="three columns",
-                    ),
-                ],
-                width=5,
-            ),
 
-            dbc.Col(
-                [
-                    dbc.Label(
-                        "Select Years:",
-                        className="fw-bold",
-                        style={"textDecoration": "underline", "fontSize": 20},
-                    ),
-                    dcc.RangeSlider(
-                        id="years-range",
-                        min=2005,
-                        max=2016,
-                        step=1,
-                        value=[2005, 2006],
-                        marks={
-                            2005: "2005",
-                            2006: "'06",
-                            2007: "'07",
-                            2008: "'08",
-                            2009: "'09",
-                            2010: "'10",
-                            2011: "'11",
-                            2012: "'12",
-                            2013: "'13",
-                            2014: "'14",
-                            2015: "'15",
-                            2016: "2016",
-                        },
-                    ),
-                    dbc.Button(
-                        id="my-button",
-                        children="Submit",
-                        n_clicks=0,
-                        color="primary",
-                        className="d-flex justify-content-end bg-light border fw-bold",
-                    ),
-                ],
-                width=6,
-            ),
-        ]
+        dbc.Col(
+            [
+                dbc.Label(
+                    "Select Years:",
+                    className="fw-bold",
+                    style={"textDecoration": "underline", "fontSize": 20},
+                ),
+                dcc.RangeSlider(
+                    id="years-range",
+                    min=2005,
+                    max=2016,
+                    step=1,
+                    value=[2005, 2006],
+                    marks={
+                        2005: "2005",
+                        2006: "'06",
+                        2007: "'07",
+                        2008: "'08",
+                        2009: "'09",
+                        2010: "'10",
+                        2011: "'11",
+                        2012: "'12",
+                        2013: "'13",
+                        2014: "'14",
+                        2015: "'15",
+                        2016: "2016",
+                    },
+                ),
+            ]
         ),
+        dbc.Row(
+            dbc.Col(
+                dbc.Button(
+                    id="my-button",
+                    children="Submit",
+                    n_clicks=0,
+                    color="primary",
+
+                ),
+                width=12,
+                className="fw-bold d-flex justify-content-end"
+            ),
+        ),
+
         dcc.Store(id="storage", storage_type="session", data={}),
         dcc.Interval(id="timer", interval=1000 * 10, n_intervals=0),
-    ]
+    ],
+    )
+        ]
 )
 
 
@@ -138,7 +144,6 @@ def store_data(n_time):
     dataframe = update_wb_data()
     last_fetched = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     data_frame = dataframe.to_dict("records")
-    # return data_frame.to_dict("records", 'last_fetched')
     return {'records': data_frame, 'last_fetched': last_fetched}
 
 
@@ -151,10 +156,17 @@ def update_time(data_storage):
         return f'Last Time and Date fetched {data_storage["last_fetched"]}'
 
 
+# @app.callback(Output('years-range', 'value'),
+#               Input("my-button", "n_clicks"),
+#               State("years-range", "value"))
+# def increment(years_range, n_clicks):
+#     if n_clicks > 0:
+#         years_range += 1
+
+
 @app.callback(
     Output("text", "children"),
     Input("my-button", "n_clicks"),
-
 )
 def update_output(n_clicks):
     if n_clicks > 0:
